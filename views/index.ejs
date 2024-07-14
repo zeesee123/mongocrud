@@ -1,0 +1,335 @@
+<%-include('templates/header')%>
+
+
+<!-- add Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Add task</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <form id="add_frm">
+
+        <div class="modal-body">
+
+            <div class="mb-3">
+                <input type="text" placeholder="title" name="title">
+            </div>
+            
+            <div class="mb-3">
+                <input type="text" placeholder="description" name="description">
+            </div>
+            
+        
+            
+
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cl_bt" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+
+    </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Edit task</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="edit_frm">
+
+      <div class="modal-body">
+
+          <div class="mb-3">
+              <input type="text" placeholder="title" name="title" id="edit_name">
+          </div>
+          
+          <div class="mb-3">
+              <input type="text" placeholder="description" name="description" id="edit_desc">
+          </div>
+
+
+          <input type="hidden" id="edit_id" data-id="" name="id">
+          
+      
+          
+
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cl_bt_edit" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </div>
+
+  </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Are you sure you want to delete this task ?</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+  
+
+      <div class="modal-body">
+
+        </div>
+      <div class="modal-footer">
+        <button type="button" id="cl_bt_del" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="submit" class="btn btn-primary" id="delete_btn" data-id="">Yes</button>
+      </div>
+
+  
+    </div>
+  </div>
+</div>
+
+
+
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">add task</button>
+
+<table>
+    <thead>
+        <th scope="col">id</th>
+        <th scope="col">title</th>
+        <th scope="col">dsc</th>
+        <th scope="col">del</th>
+        <th scope="col">edit</th>
+    </thead>
+    <tbody>
+        
+    </tbody>
+</table>
+
+
+
+
+
+<!-- below is the script part -->
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script>
+
+  let edit_id=document.querySelector('#edit_id');
+
+  let edit_name=document.querySelector('#edit_name');
+
+  let edit_desc=document.querySelector('#edit_desc');
+
+  let delete_btn=document.querySelector('#delete_btn');
+
+
+
+  async function loadstuff(){
+
+    let fe=await fetch('/tasks');
+    let re=await fe.json();
+
+    console.log(re);
+
+    let tbody=document.querySelector('tbody');
+
+    tbody.innerHTML='';
+
+    if(re.message=='good'){
+
+      re.values.forEach((v)=>{
+
+        console.log(v);
+
+        tbody.innerHTML+=`<tr>
+          <td>${v._id}</td>
+          <td>${v.title}</td>
+          <td>${v.description}</td>
+          <td><button class='btn btn-danger' data-id="${v._id}" data-bs-toggle="modal" data-bs-target="#deleteModal">DELETE</button></td>
+          <td><button class='btn btn-primary editor' data-id="${v._id}" data-bs-toggle="modal" data-bs-target="#editModal">EDIT</button></td>
+          </tr>`;
+      })
+
+
+    }
+
+
+  }
+
+  loadstuff();
+
+    let frm=document.querySelector('#add_frm');
+
+    let edit_frm=document.querySelector('#edit_frm');
+
+    console.log('this is the edit form',edit_frm);
+
+
+
+    let cl_bt=document.querySelector('#cl_bt');
+
+    let cl_bt_edit=document.querySelector('#cl_bt_edit');
+
+    let cl_bt_del=document.querySelector('#cl_bt_del');
+
+    let inps=document.querySelectorAll('input');
+
+    console.log('these are the inputs',inps);
+    
+    frm.addEventListener('submit',async(e)=>{
+
+        e.preventDefault();
+
+        console.log('you just submitted the form');
+
+        let data=new FormData(frm);
+
+        let obj={};
+
+        data.forEach((d,i)=>{
+          
+        obj[i]=d;
+
+          });
+
+          console.log('this is the object',obj);
+
+
+          let fet=await fetch('/addtask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+          let res=await fet.json();
+
+          console.log(res);
+
+          if(res.message=='good insert'){
+
+            cl_bt.click();
+
+            inps.forEach((a)=>{
+
+              a.value='';
+            });
+
+            loadstuff();
+
+
+          }
+    });
+
+    edit_frm.addEventListener('submit',async(e)=>{
+
+      e.preventDefault();
+
+      console.log('this is the edit form mate');
+
+      const data=new FormData(edit_frm);
+
+      let obj={};
+
+      data.forEach((d,i)=>{
+
+        obj[i]=d;
+      })
+
+      let fe=await fetch('/editask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+      let re=await fe.json();
+
+      console.log('edit info',re);
+
+      if(re.message=='success'){
+
+        loadstuff();
+
+        cl_bt_edit.click();
+
+
+
+      }
+      
+    });
+
+
+    $(document).on('click','.btn-danger',function(){
+
+      console.log(this.getAttribute('data-id'));
+
+      console.log('you clicked on danger');
+
+      delete_btn.setAttribute('data-id',this.getAttribute('data-id'));
+    });
+
+
+    $(document).on('click','.editor',async function(){
+
+      // console.log(this.getAttribute('data-id'));
+
+      edit_id.setAttribute('data-id',this.getAttribute('data-id'));
+
+      let id=edit_id.getAttribute('data-id');
+
+      edit_id.value=id;
+
+      console.log('you clicked on editor');
+
+      let fe=await fetch(`/get_task/${id}`);
+
+      let re=await fe.json();
+
+      console.log('this is the response for the fetch thingy',re);
+
+      if(re.message=='giddy'){
+
+        edit_name.value=re.data.title;
+
+        edit_desc.value=re.data.description;
+
+
+      }
+
+      
+
+    })
+
+    delete_btn.onclick=async()=>{
+
+      console.log('you clicked on actual delete');
+
+      let fe=await fetch('/deletetask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:delete_btn.getAttribute('data-id')})});
+      let re=await fe.json();
+
+      console.log('this is the response',re);
+
+      if(re.message=='success'){
+
+        console.log('great');
+
+        cl_bt_del.click();
+
+        loadstuff();
+        
+      }else{
+        console.log('eh');
+      }
+    }
+
+
+</script>
+
+
+
+<%-include('templates/footer')%>
